@@ -22,7 +22,7 @@ jobs:
 
   build_openwrt:
 
-    name: Build OpenWrt firmware
+    name: 云编译 / Build OpenWrt
 
     runs-on: ubuntu-latest
 
@@ -46,6 +46,7 @@ jobs:
           sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler antlr3 gperf swig
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
+
           # sudo mkdir -p -m 777 /mnt/openwrt/bin /mnt/openwrt/build_dir/host /mnt/openwrt/build_dir/hostpkg /mnt/openwrt/dl /mnt/openwrt/feeds /mnt/openwrt/staging_dir
           # ln -s /mnt/openwrt/bin ./bin
           # mkdir -p ./build_dir
@@ -54,18 +55,23 @@ jobs:
           # ln -s /mnt/openwrt/dl ./dl
           # ln -s /mnt/openwrt/feeds ./feeds
           # ln -s /mnt/openwrt/staging_dir ./staging_dir
+
           df -h
+
       - name: 更新 Feeds
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
-      - name: Generate configuration file
+
+      - name: 生成配置
         run: |
           rm -f ./.config*
           touch ./.config
+
           #
           # 在 cat >> .config <<EOF 到 EOF 之间粘贴你的编译配置, 需注意缩进关系
           # 例如:
+
           cat >> .config <<EOF
           CONFIG_TARGET_bcm27xx=y
           CONFIG_TARGET_bcm27xx_bcm2710_DEVICE_rpi-3=y
@@ -75,17 +81,21 @@ jobs:
           CONFIG_LUCI_LANG_zh_Hans=y
           
           EOF
+
           #
           # ===============================================================
           # 
+
           sed -i 's/^[ \t]*//g' ./.config
           make defconfig
-      - name: Make download
+
+      - name: 下载编译工具
         run: |
           make download -j8 || make download -j1 V=s
           rm -rf $(find ./dl/ -size -1024c)
           df -h
-      - name: Compile firmware
+
+      - name: 编译固件
         run: |
           make -j$(nproc) || make -j1 V=s
           echo "======================="
@@ -95,6 +105,7 @@ jobs:
           echo "======================="
           du -h ./ --max-depth=1
           du -h /mnt/openwrt/ --max-depth=1 || true
+
       - name: Prepare artifact
         run: |
           mkdir -p ./artifact/firmware
@@ -104,6 +115,7 @@ jobs:
           cp -rf $(find ./bin/targets/ -type f) ./artifact/firmware/
           cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
           cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+
       - name: Deliver buildinfo
         uses: actions/upload-artifact@v2
         with:
