@@ -16,11 +16,10 @@ on:
     release:
       types: [published]
 jobs:
-
   
   build_openwrt:
     
-    name: Build OpenWrt firmware
+    name: 云编译 / Build OpenWrt
     
     runs-on: ubuntu-latest
     
