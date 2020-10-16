@@ -10,14 +10,14 @@
 name: OpenWrt-CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
   # schedule:
     # - cron: 0 20 * * *
   release:
-    types: [edited]
-  workflow_dispatch:
+    types: [published]
   
 jobs:
   build_openwrt:
